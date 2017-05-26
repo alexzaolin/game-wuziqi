@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        *{margin:0;padding:0;-webkit-box-sizing: border-box;box-sizing: border-box;}
+        #chess-container{
+            width:400px;
+            height: 400px;
+        }
+        .chess-box{
+            position: relative;
+            float: left;
+            width:40px;
+            height: 40px;
+            line-height: 40px;
+            text-align: center;
+            border:1px solid rgba(0,0,0,.2);
+            background-color: #eee;
+        }
+        .chess-item{
+            display: none;
+            position: absolute;
+            top:50%;
+            left: 50%;
+            width:20px;
+            height:20px;
+            border-radius: 50%;
+            background-color: transparent;
+            -webkit-transform: translate(-50%,-50%);
+            -ms-transform: translate(-50%,-50%);
+            transform: translate(-50%,-50%);
+        }
+        .chess-item.white{display: block;background-color: #fff;}
+        .chess-item.black{display: block;background-color: #000;}
+    </style>
+</head>
+<body>
+<div id="chess-container"></div>
+<script type="text/javascript">
+var chess = {
+    config:{
+        size:10,
+        id:'chess-container',
+        whiteNum:1,
+        blackNum:2
+    },
+    chessArr:[],
+    chessContainer:null,
+    canWhiteGo:false,
+    getChessPiecesTemplate:function(x,y){
+        var code = `<div class="chess-box" data-x="${x}" data-y="${y}"><span class="chess-item active"></span></div>`;
+        return code;
+    },
+    chessboardInit:function(){
+        let config = this.config;
+        let htmlCode = '';
+
+        for(let i=0;i<config.size;i++){
+            let subArr = [];
+            for(let j=0;j<config.size;j++){
+                subArr.push(j);
+                htmlCode +=  this.getChessPiecesTemplate(i,j);
+            }
+            this.chessArr.push(subArr);
+        }
+        this.chessContainer.innerHTML = htmlCode;
+    },
+    clickHandle(e){
+        let target = e.target;
+        let className = target.className.split(' ');
+        if(className.indexOf('chess-box') < -1) return
+
+        let x = target.getAttribute("data-x");
+        let y = target.getAttribute("data-y");
+        console.log(x,y);
+        chess.paintChess(x,y);
+        chess.chessArr[x][y] = chess.canWhiteGo ? chess.config.whiteNum:chess.config.blackNum;
+        chess.IsGameOver(x,y);
+        chess.canWhiteGo = !chess.canWhiteGo;
+    },
+    IsGameOver(x,y){
+
+    },
+    paintChess:function(x,y){
+        let domIndex = Math.abs(x*this.config.size + ~~y);
+        let clas = this.canWhiteGo ? 'white':'black';
+
+        document.querySelectorAll(".chess-item")[`${domIndex}`].classList.add(`${clas}`);
+    },
+    init:function(){
+        this.chessContainer = document.querySelectorAll(`#${this.config.id}`)[0];
+        this.chessboardInit();
+        this.eventBind();
+        this.canWhiteGo = true;//假设默认白棋先走
+    },
+    eventBind:function(){
+        let container = this.chessContainer;
+        container.addEventListener("click",this.clickHandle);
+    },
+}
+window.onload = function(){
+    chess.init();
+}
+</script>
+</body>
+</html>

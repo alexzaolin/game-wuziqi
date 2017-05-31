@@ -1,1 +1,1 @@
-#wuziqi
+#game-wuziqi

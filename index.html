@@ -12,6 +12,9 @@
     <title>wuziqi</title>
     <style>
         *{margin:0;padding:0;-webkit-box-sizing: border-box;box-sizing: border-box;}
+        body{
+
+        }
         .absolute-center{
             position: absolute;
             top:50%;
@@ -39,6 +42,7 @@
         }
         #chess-container{
             position: relative;
+            margin:20px auto;
             width:400px;
             height: 400px;
         }
@@ -298,7 +302,6 @@ var Chess = {
         let clas = role == this.config.whiteNum ? 'white':'black';
 
         document.querySelectorAll(".chess-item")[`${domIndex}`].classList.remove(`${clas}`);
-        console.log(document.querySelectorAll(".chess-item")[`${domIndex}`].classList);
     },
     init:function(){
         this.chessContainer = document.querySelectorAll(`#${this.config.id}`)[0];
@@ -371,10 +374,7 @@ var Chess = {
         this.canWhiteGo = true;
     },
     regret:function(){
-        // Chess.chessStack.push({
-        //     x,y,
-        //     "role":Chess.chessArr[x][y]
-        // });
+        /*悔棋*/
         console.log(this.chessStack.length,this.chessIndex);
         if(this.chessIndex==0||((this.chessStack.length-1)-this.chessIndex==this.config.regretLimit*2)){
             alert("好了，够了，悔棋次数不得超过限制");
@@ -392,7 +392,7 @@ var Chess = {
         this.IsGameOver(this.chessStack[this.chessIndex].x,this.chessStack[this.chessIndex].y,this.chessStack[this.chessIndex].role);
     },
     unregret:function(){
-        console.log(this.chessStack.length,this.chessIndex);
+        /*反悔棋*/
         if((this.chessStack.length-1)==this.chessIndex){
             alert("你没有悔过的棋了");
             return false;

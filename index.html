@@ -119,9 +119,9 @@ var Chess = {
     config:{
         size:15,
         id:'chess-container',
-        whiteNum:1,
-        blackNum:2,
-        regretLimit:2
+        whiteNum:1,//白期
+        blackNum:2,//黑棋
+        regretLimit:2//允许悔棋的步数
     },
     chessStack:[],//记录栈，记录棋局的每一步,
     chessIndex:0,//当前棋局在记录栈中的指针
@@ -163,6 +163,8 @@ var Chess = {
         var size = this.config.size;
 
         var startX,startY;
+        /*需要计算的位数，自下棋点，向四个方向分别计算四个值，如果都相同则游戏结束*/
+        var calcNum = 4;
         var posObj = {
             "LR":function(){
                 startX = x;
@@ -179,7 +181,7 @@ var Chess = {
                 }
             },
             "LTRB":function(){
-                for(let i=x,j=y,num=5;num>0;num--){
+                for(let i=x,j=y,num=calcNum;num>0;num--){
                     if(i==0||j==0){break;}
                     i--;j--;
                     startX = i;
@@ -190,7 +192,7 @@ var Chess = {
                 }
             },
             "LBRT":function(){
-                for(let i=x,j=y,num=5;num>0;num--){
+                for(let i=x,j=y,num=calcNum;num>0;num--){
                     if(i==0||j==size){break;}
                     i--;j++;
                     startX = i;
@@ -293,7 +295,9 @@ var Chess = {
         let domIndex = Math.abs(x*this.config.size + ~~y);
         let clas = role == this.config.whiteNum ? 'white':'black';
 
-        document.querySelectorAll(".chess-item")[`${domIndex}`].classList.add(`${clas}`);
+        let Obj = document.querySelectorAll(".chess-item")[`${domIndex}`];
+        Obj.classList.add(`${clas}`);
+        Obj.setAttribute('data-val',opt.role);
     },
     unpaintChess:function(opt){
         /*卸载棋子*/
@@ -385,6 +389,7 @@ var Chess = {
         console.log("悔棋",regretObj);
         this.unpaintChess(regretObj);
         this.unpaintChess(regretObj1);
+
         this.chessArr[regretObj.x][regretObj.y] = 0;
         this.chessArr[regretObj1.x][regretObj1.y] = 0;
         this.canWhiteGo = regretObj1.role == this.config.whiteNum?true:false;
@@ -403,6 +408,7 @@ var Chess = {
         console.log("反悔棋",unregret);
         this.paintChess(unregret);
         this.paintChess(unregret1);
+
         this.chessArr[unregret.x][unregret.y] = unregret.role;
         this.chessArr[unregret1.x][unregret1.y] = unregret1.role;
         this.canWhiteGo = unregret.role == this.config.whiteNum?false:true;

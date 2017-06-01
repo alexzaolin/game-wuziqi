@@ -121,21 +121,24 @@ var Chess = {
         id:'chess-container',
         whiteNum:1,//白期
         blackNum:2,//黑棋
-        regretLimit:2//允许悔棋的步数
+        regretLimit:1//允许悔棋的步数
     },
     chessStack:[],//记录栈，记录棋局的每一步,
     chessIndex:0,//当前棋局在记录栈中的指针
 
-    chessArr:[],
-    chessContainer:null,
+    chessArr:[],/*棋盘二维数组*/
+
+    chessContainer:null,/*获取容纳棋盘的容器*/
     chessSelfContainer:null,
-    canWhiteGo:false,
-    gameOver:false,
-    getChessPiecesTemplate:function(x,y){
+    canWhiteGo:false,/*当前下棋人*/
+    gameOver:false,/*游戏是否结束*/
+
+    getChessPiecesTemplate(x,y){
         var code = `<div class="chess-box" data-x="${x}" data-y="${y}"><div class="chess-item"></div></div>`;
         return code;
     },
-    chessboardInit:function(){
+    chessboardInit(){
+        /*棋盘初始化*/
         let config = this.config;
         let htmlCode = '<div class="chess-container">';
         this.chessArr = [];
@@ -152,18 +155,20 @@ var Chess = {
             <div class="chess-shade"></div>
         `;
         this.chessContainer.style.cssText = `width:${this.config.size*40}px;height:${this.config.size*40}px;`;
-        console.log(this.chessContainer.style.cssText);
         this.chessContainer.innerHTML = htmlCode;
-
+        /*取DOM对象*/
         this.chessSelfContainer = document.querySelectorAll(".chess-container")[0];
         this.shade = document.querySelectorAll(".chess-shade")[0];
     },
-    calcStartPos(x,y,direction){
-        /*获取四个方向开始计算的点坐标*/
+    getStartPos(x,y,direction){
+        /*获取四个方向“开始”计算的点坐标*/
         var size = this.config.size;
 
         var startX,startY;
-        /*需要计算的位数，自下棋点，向四个方向分别计算四个值，如果都相同则游戏结束*/
+        /*
+            需要计算的位数，自下棋点，向四个方向分别计算四个棋位，如果都相同则游戏结束
+            如果这连续的四个位置都为同一值，再加上本身，即为五子相连，游戏结束
+        */
         var calcNum = 4;
         var posObj = {
             "LR":function(){
@@ -204,24 +209,9 @@ var Chess = {
             }
         }
         /*direction*/
-        switch (direction) {
-            case "LR":
-                return posObj["LR"]();
-                break;
-            case "TB":
-                return posObj["TB"]();
-                break;
-            case "LTRB":
-                return posObj["LTRB"]();
-                break;
-            case "LBRT":
-                return posObj["LBRT"]();
-                break;
-            default:
-
-        }
+        return posObj[direction]();
     },
-    IsGameOver(x,y,canWhiteGo){
+    isGameOver(x,y,canWhiteGo){
         /*
             计算游戏是否结束
             即，下棋点在四个方向上是否有五个连续的棋,
@@ -256,7 +246,7 @@ var Chess = {
             if(TBCount == 5){console.log("TB 胜利");break;}
         }
         /*LTRB 左上右下*/
-        for(let i=this.calcStartPos(x,y,"LTRB").startX,j=this.calcStartPos(x,y,"LTRB").startY;i<size;i++,j++){
+        for(let i=this.getStartPos(x,y,"LTRB").startX,j=this.getStartPos(x,y,"LTRB").startY;i<size;i++,j++){
             if(chessArr[i][j] == curChess){
                 LTRBCount++;
             }else{
@@ -265,7 +255,7 @@ var Chess = {
             if(LTRBCount == 5){console.log("LTRB 胜利");break;}
         }
         /*LBRT 左下右上*/
-        for(let i=this.calcStartPos(x,y,"LBRT").startX,j=this.calcStartPos(x,y,"LBRT").startY;i<size;i++,j--){
+        for(let i=this.getStartPos(x,y,"LBRT").startX,j=this.getStartPos(x,y,"LBRT").startY;i<size;i++,j--){
             if(chessArr[i][j] == curChess){
                 LBRTCount++;
             }else{
@@ -289,7 +279,7 @@ var Chess = {
         this.showResult();
         return false;
     },
-    paintChess:function(opt){
+    paintChess(opt){
         /*绘制棋子*/
         let x=opt.x,y=opt.y,role = opt.role;
         let domIndex = Math.abs(x*this.config.size + ~~y);
@@ -299,23 +289,25 @@ var Chess = {
         Obj.classList.add(`${clas}`);
         Obj.setAttribute('data-val',opt.role);
     },
-    unpaintChess:function(opt){
+    unpaintChess(opt){
         /*卸载棋子*/
         let x=opt.x,y=opt.y,role = opt.role;
         let domIndex = Math.abs(x*this.config.size + ~~y);
         let clas = role == this.config.whiteNum ? 'white':'black';
 
-        document.querySelectorAll(".chess-item")[`${domIndex}`].classList.remove(`${clas}`);
+        let Obj = document.querySelectorAll(".chess-item")[`${domIndex}`];
+        Obj.classList.remove(`${clas}`);
+        Obj.setAttribute('data-val',0);
     },
-    init:function(){
+    init(){
         this.chessContainer = document.querySelectorAll(`#${this.config.id}`)[0];
         this.chessboardInit();
         this.eventBind();
         this.canWhiteGo = true;//假设默认白棋先走
     },
-    eventBind:function(){
+    eventBind(){
         let container = this.chessSelfContainer;
-        container.addEventListener("click",this.clickHandle,false);
+        container.addEventListener("click",this.onClickHandle,false);
         document.querySelectorAll("#restart")[0].addEventListener("click",function(){
             Chess.restart();
         },false);
@@ -326,7 +318,7 @@ var Chess = {
             Chess.unregret();
         },false);
     },
-    clickHandle(e){
+    onClickHandle(e){
         if(!!Chess.gameOver){alert(`游戏已经结束了哦`);return false;}
         let target = e.target;
         let className = target.className.split(' ');
@@ -343,8 +335,7 @@ var Chess = {
 
         Chess.chessArr[x][y] = Chess.canWhiteGo ? Chess.config.whiteNum:Chess.config.blackNum;
         Chess.paintChess({
-            x,
-            y,
+            x,y,
             "role":Chess.chessArr[x][y]
         });
 
@@ -354,11 +345,11 @@ var Chess = {
         });
         Chess.chessIndex = Chess.chessStack.length-1;
 
-        Chess.IsGameOver(x,y,Chess.canWhiteGo)
+        Chess.isGameOver(x,y,Chess.canWhiteGo)
         Chess.canWhiteGo = !Chess.canWhiteGo;
-
     },
     showResult(){
+        /*棋局结果显示*/
         if(!!this.gameOver){
             setTimeout(function(){
                 Chess.shade.style.display = 'block';
@@ -369,23 +360,23 @@ var Chess = {
                 Chess.shade.style.display = 'none';
             },0);
         }
-
     },
-    restart:function(){
+    restart(){
+        /*重新开始*/
         this.chessboardInit();
         this.eventBind();
         this.gameOver = false;
         this.canWhiteGo = true;
     },
-    regret:function(){
+    regret(){
         /*悔棋*/
         console.log(this.chessStack.length,this.chessIndex);
         if(this.chessIndex==0||((this.chessStack.length-1)-this.chessIndex==this.config.regretLimit*2)){
             alert("好了，够了，悔棋次数不得超过限制");
             return false;
         }
-        var regretObj = this.chessStack[this.chessIndex]<0?0:this.chessStack[this.chessIndex];
-        var regretObj1 = this.chessStack[this.chessIndex-1]<0?0:this.chessStack[this.chessIndex-1];
+        var regretObj = this.chessStack[this.chessIndex];
+        var regretObj1 = this.chessStack[this.chessIndex-1];
         console.log("悔棋",regretObj);
         this.unpaintChess(regretObj);
         this.unpaintChess(regretObj1);
@@ -394,9 +385,9 @@ var Chess = {
         this.chessArr[regretObj1.x][regretObj1.y] = 0;
         this.canWhiteGo = regretObj1.role == this.config.whiteNum?true:false;
         this.chessIndex -= 2;
-        this.IsGameOver(this.chessStack[this.chessIndex].x,this.chessStack[this.chessIndex].y,this.chessStack[this.chessIndex].role);
+        this.isGameOver(regretObj.x,regretObj.y,regretObj.role);
     },
-    unregret:function(){
+    unregret(){
         /*反悔棋*/
         if((this.chessStack.length-1)==this.chessIndex){
             alert("你没有悔过的棋了");
@@ -412,7 +403,7 @@ var Chess = {
         this.chessArr[unregret.x][unregret.y] = unregret.role;
         this.chessArr[unregret1.x][unregret1.y] = unregret1.role;
         this.canWhiteGo = unregret.role == this.config.whiteNum?false:true;
-        this.IsGameOver(unregret.x,unregret.y,unregret.role);
+        this.isGameOver(unregret.x,unregret.y,unregret.role);
     },
 }
 window.onload = function(){
